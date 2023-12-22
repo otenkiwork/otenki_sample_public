@@ -1,0 +1,13 @@
+<Config>
+	<Database>
+		<ServerName>xxx</ServerName>
+		<User>userxxx</User>
+		<Password>passxxx</Password>
+	</Database>
+	<Task>
+		<PgName>task001.ps1</PgName>
+	</Task>
+	<Task>
+		<PgName>task002.ps1</PgName>
+	</Task>
+</Config>
