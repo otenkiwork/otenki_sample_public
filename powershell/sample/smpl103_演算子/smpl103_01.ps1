@@ -29,3 +29,10 @@ Write-Host ("`$strVal -eq abc " + ($strVal -eq "abc"))
 Write-Host ("`$strVal -eq abd " + ($strVal -eq "abd"))
 Write-Host ("`$strVal -eq abC " + ($strVal -eq "abC"))
 Write-Host ("`$strVal -ceq abC " + ($strVal -ceq "abC") + " ¦‰‰Zq‚Ìæ“ª c ‚Í‘å•¶š¬•¶š‹æ•Ê‚·‚é")
+
+Write-Host ("¡ ”z—ñ”äŠr")
+$arrVal = @("aaa", "bbb", "ccc")
+Write-Host ("`$arrVal=" + $arrVal)
+Write-Host ("`$arrVal -contains ""aaa"" " + ($arrVal -contains "aaa"))
+Write-Host ("`$arrVal -contains ""aaa"" " + ($arrVal -contains "ddd"))
+
