@@ -1,3 +1,4 @@
+# ŠÔˆ—ƒNƒ‰ƒX
 class CComDateTime {
     $startTime = $null
     $endTime = $null
