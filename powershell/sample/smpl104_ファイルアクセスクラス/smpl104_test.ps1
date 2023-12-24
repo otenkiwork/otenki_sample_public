@@ -12,12 +12,17 @@ foreach($rec in $objFile.GetData()){
     Write-Host $rec 
 }
 
-Write-Host "ヘッダ以外取得"
+Write-Host "ヘッダ以外取得１"
 $objFile.SetStrHeader(@("col1"))
 foreach($rec in $objFile.GetDataNotHeader()){
     Write-Host $rec 
 }
 
-
+Write-Host "ヘッダ以外取得２"
+$objFile.SetStrHeader(@("col1", "a001"))
+$objFile.SetRecProc({
+    Write-Host ("recProc:" + $_) 
+})
+$objFile.ExecRecProc()
 
 Write-Host "処理終了"
