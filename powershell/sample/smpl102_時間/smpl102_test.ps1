@@ -12,5 +12,5 @@ $objTime.SetEndTime((Get-Date))
 
 Write-Host $objTime.GetStrStartTime()
 Write-Host $objTime.GetStrEndTime()
-Write-Host $objTime.GetStrDurationMS()
+Write-Host $objTime.GetStrDuration()
 

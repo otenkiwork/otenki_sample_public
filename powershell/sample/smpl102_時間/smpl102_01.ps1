@@ -24,7 +24,7 @@ class CComDateTime {
         return $this.endTime.ToString("yyyyMMddhhmmss")
     }
 
-    [string] GetStrDurationMS(){
+    [string] GetStrDuration(){
         # 処理時間を算出しTimeSpanオブジェクトを取得
         [TimeSpan]$duration = $this.endTime - $this.startTime
         return $duration.Minutes.ToString("00") + ":" + $duration.Seconds.ToString("00")
