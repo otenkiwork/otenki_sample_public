@@ -25,4 +25,16 @@ $objFile.SetRecProc({
 })
 $objFile.ExecRecProc()
 
+Write-Host "抽出値指定１"
+$whereList = @{0 = "a002"}
+foreach($rec in $objFile.GetDataWhere($whereList)){
+    Write-Host $rec 
+}
+
+Write-Host "抽出値指定２"
+$whereList = @{0 = "a00*"}
+foreach($rec in $objFile.GetDataWhere($whereList)){
+    Write-Host $rec 
+}
+
 Write-Host "処理終了"

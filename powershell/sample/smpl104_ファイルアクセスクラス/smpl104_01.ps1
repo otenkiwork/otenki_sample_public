@@ -7,6 +7,7 @@ class CComFileAccess {
     $fileData
     $arrStrHeader    # ヘッダ行と判定する文字列
     $funcRecProc
+    $delimiter
 
     #============================================================
     # コンストラクタ
@@ -17,6 +18,7 @@ class CComFileAccess {
         $this.filePath = ""
         $this.fileData = ""
         $this.arrStrHeader = @()
+        $this.delimiter = " "
     }
 
     #============================================================
@@ -49,6 +51,34 @@ class CComFileAccess {
     [object[]] GetDataNotHeader(){
         # ヘッダ以外
         return $this.fileData | Where-Object {-not ($this.CheckHeader($_))}
+    }
+
+    #============================================================
+    # データリスト取得(項目値で抽出)(ヘッダ除外)
+    #------------------------------------------------------------
+    # 引数   : $pWhere : 抽出項目値(項目IDXと抽出項目値のハッシュテーブル)
+    # 戻り値 : データリスト
+    #------------------------------------------------------------
+    # 抽出項目値との一致判定は -cLike で判定する
+    #============================================================
+    [object[]] GetDataWhere($pWhereList){
+        return $this.fileData | Where-Object {
+            $ret = $true
+            if ($this.CheckHeader($_)){
+                $ret = $false    
+            }
+            else {
+                $arr = $_.Split($this.delimiter)             
+                foreach($key in $pWhereList.Keys){
+                    $val = $pWhereList[$key]
+                    if (-not ($arr[$key] -cLike $val)){
+                        $ret = $false    
+                        break
+                    }
+                }
+            }
+            return $ret
+        }
     }
 
     #============================================================
