@@ -12,6 +12,15 @@ try {
     $objDb.Open()
 
     $objDb.SetSql("SELECT * FROM tbl001")
+    # データ取得（文字列）
+    Write-Host "データ取得（文字列）"
+    $objDb.SetDataType("Str")
+    $data = $objDb.ExecSelect()
+    Write-Host $data
+
+    # データ取得（カスタムオブジェクト）
+    Write-Host "データ取得（カスタムオブジェクト）"
+    $objDb.SetDataType("CustomObj")
     $data = $objDb.ExecSelect()
     Write-Host $data
     $objDb.Close()
