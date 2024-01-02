@@ -25,6 +25,12 @@ $objFile.SetRecProc({
 })
 $objFile.ExecRecProc()
 
+Write-Host "カスタムオブジェクトで取得"
+$objFile.SetStrHeader(@("col1"))
+foreach($rec in $objFile.GetDataCustomObj()){
+    Write-Host $rec 
+}
+
 Write-Host "抽出値指定１"
 $whereList = @{0 = "a002"}
 foreach($rec in $objFile.GetDataWhere($whereList)){

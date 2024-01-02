@@ -82,6 +82,47 @@ class CComFileAccess {
     }
 
     #============================================================
+    # データリスト取得(カスタムオブジェクト)(ヘッダ除外)
+    #------------------------------------------------------------
+    # 引数   : $pWhere : 抽出項目値(項目IDXと抽出項目値のハッシュテーブル)
+    # 戻り値 : データリスト
+    #------------------------------------------------------------
+    # 抽出項目値との一致判定は -cLike で判定する
+    #============================================================
+    [object[]] GetDataCustomObj(){
+        $objData = @()
+        if ($this.fileData.Length -le 0){
+            return $objData
+        }
+
+        #ヘッダから列名を取り出す
+        $colNames = $this.fileData[0].Split($this.delimiter).Trim()
+
+        $this.fileData | ForEach-Object {
+            if ($this.CheckHeader($_)){
+            }
+            else {
+                # ハッシュを作成
+                $hashData=[ordered]@{}    
+
+                $arr = $_.Split($this.delimiter)             
+
+                for ($i = 0 ; $i -lt $colNames.Length ; $i++){
+                    if ($arr.Length -gt $i){
+                        $hashData += @{$colNames[$i] = $arr[$i]}
+                    }
+                    else {
+                        $hashData += @{$colNames[$i] = ""}
+                    }
+                }
+                # ハッシュからカスタムオブジェクトにキャスト
+                $objData += [pscustomobject]$hashData
+            }
+        }
+        return $objData
+    }
+
+    #============================================================
     # ヘッダ判定文字列設定
     #------------------------------------------------------------
     # 引数   : $pArrStrHeader : ヘッダ判定文字列の配列
