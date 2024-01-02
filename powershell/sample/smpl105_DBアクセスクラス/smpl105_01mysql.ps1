@@ -1,3 +1,12 @@
+try {
+    Add-Type -Path 'C:\Program Files (x86)\MySQL\MySQL Connector NET 8.2.0\MySQL.Data.dll'
+}
+catch {
+    Write-Host "例外発生しているがそのまま続行"
+    Write-Host $Error.Exception.message
+}
+
+. .\smpl105_01.ps1
 #==============================================================================
 # DBアクセスクラス(ベースクラス)
 #==============================================================================
@@ -96,7 +105,6 @@ class CComDbAccess {
         $objData = @()
         switch ($this.dataType) {
             "CustomObj" { $objData = $this.GetDataCustomObj() }
-            "Array" { $objData = $this.GetDataArray() }
             "Str" { $objData = $this.GetDataStr() }
             Default { $objData = $this.GetDataStr() }
         }
@@ -165,37 +173,6 @@ class CComDbAccess {
                 $line += $this.dbDataReader[$_.ColumnName].tostring()               
             }
             $objData += $line
-        }
-
-        return $objData
-    }
-
-    #============================================================
-    # データ取得(配列)
-    #------------------------------------------------------------
-    # 引数   : なし
-    # 戻り値 : データ
-    #============================================================
-    [object] GetDataArray(){
-        $objData = @()
-
-        #列名を取り出す
-        $colNames = $this.dbDataReader.GetSchemaTable() | Select-Object ColumnName
-
-        #ヘッダ
-        $arr = @()    
-        $colNames | ForEach-Object {
-            $arr += $_.ColumnName               
-        }
-        $objData += $arr
-
-        #データが取り出せなくなるまでループ
-        while ($this.dbDataReader.read()){
-            $arr = @()    
-            $colNames | ForEach-Object {
-                $arr += $this.dbDataReader[$_.ColumnName].tostring()               
-            }
-            $objData += $arr
         }
 
         return $objData
