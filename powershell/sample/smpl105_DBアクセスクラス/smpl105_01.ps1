@@ -112,7 +112,7 @@ class CComDbAccess {
     # 引数   : なし
     # 戻り値 : データ
     #============================================================
-    [object] GetDataCustomObj(){
+    [object[]] GetDataCustomObj(){
         #列名を取り出す
         $colNames = $this.dbDataReader.GetSchemaTable() | Select-Object ColumnName
 
@@ -139,7 +139,7 @@ class CComDbAccess {
     # 引数   : なし
     # 戻り値 : データ
     #============================================================
-    [object] GetDataStr(){
+    [object[]] GetDataStr(){
         $objData = @()
 
         #列名を取り出す
@@ -176,7 +176,7 @@ class CComDbAccess {
     # 引数   : なし
     # 戻り値 : データ
     #============================================================
-    [object] GetDataArray(){
+    [object[]] GetDataArray(){
         $objData = @()
 
         #列名を取り出す
