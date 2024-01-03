@@ -50,7 +50,6 @@ class CComFileAccess {
     [void] ReadFile($pFilePath){
         $this.filePath = $pFilePath
         $this.fileData = Get-Content $this.filePath
-        test001
     }
 
     #============================================================
