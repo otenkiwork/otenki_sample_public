@@ -17,17 +17,6 @@ class CComCnvData {
     }
 
     #============================================================
-    # CSVに変換
-    #------------------------------------------------------------
-    # 引数   : $pData : 変換元データ
-    # 戻り値 : CSVデータ
-    #============================================================
-    [object[]] DataToCsv($pData){
-        $data = ""
-        return $data
-    }
-
-    #============================================================
     # デリミタ設定
     #------------------------------------------------------------
     # 引数   : $pDelimiter : デリミタ
@@ -38,185 +27,112 @@ class CComCnvData {
     }
 
     #============================================================
-    # ファイル読み込み
+    # CSVに変換
     #------------------------------------------------------------
-    # 引数   : $pFilePath : ファイルパス
-    # 戻り値 : なし
+    # 引数   : $pData : 変換元データ
+    # 戻り値 : CSVデータ
     #============================================================
-    [void] ReadFile($pFilePath){
-        $this.filePath = $pFilePath
-        $this.fileData = Get-Content $this.filePath
-        test001
-    }
-
-    #============================================================
-    # ファイル書き込み
-    #------------------------------------------------------------
-    # 引数   : なし
-    # 戻り値 : なし
-    #============================================================
-    [void] WriteFile(){
-        Set-Content $this.filePath $this.fileData
-    }
-
-    #============================================================
-    # CSVファイル書き込み(カスタムオブジェクト指定)
-    #------------------------------------------------------------
-    # 引数   : $pObjData : 出力データ(カスタムオブジェクト指定)
-    # 戻り値 : なし
-    #============================================================
-    [void] WriteCsvFileCustomObj($pObjData){
-        $outData = @()
-        #列名を取り出す
-        $colNames = $pObjData[0].psobject.properties.name
-
-        # ヘッダ
-        $outData += ($colNames -join $this.delimiter)
-
-        # 明細
-        $pObjData | ForEach-Object {
-            $rec = $_
-            $arr = @()
-            $colNames | ForEach-Object {$arr += $rec.$_}
-            $outData += ($arr -join $this.delimiter)
+    [object[]] DataToCsv($pData){
+        $dataList = @()
+        if ($pData.Length -le 0){
+            return $dataList
         }
 
-        $this.fileData = $outData
-        $this.WriteFile()
-    }
-
-    #============================================================
-    # データリスト取得
-    #------------------------------------------------------------
-    # 引数   : なし
-    # 戻り値 : データリスト
-    #============================================================
-    [object[]] GetData(){
-        return $this.fileData
-    }
-
-    #============================================================
-    # データリスト取得(ヘッダ除外)
-    #------------------------------------------------------------
-    # 引数   : なし
-    # 戻り値 : データリスト
-    #============================================================
-    [object[]] GetDataNotHeader(){
-        # ヘッダ以外
-        return $this.fileData | Where-Object {-not ($this.CheckHeader($_))}
-    }
-
-    #============================================================
-    # データリスト取得(項目値で抽出)(ヘッダ除外)
-    #------------------------------------------------------------
-    # 引数   : $pWhere : 抽出項目値(項目IDXと抽出項目値のハッシュテーブル)
-    # 戻り値 : データリスト
-    #------------------------------------------------------------
-    # 抽出項目値との一致判定は -cLike で判定する
-    #============================================================
-    [object[]] GetDataWhere($pWhereList){
-        return $this.fileData | Where-Object {
-            $ret = $true
-            if ($this.CheckHeader($_)){
-                $ret = $false    
+        if ($pData[0].GetType().Name -eq "object[]"){
+            $pData | ForEach-Object {
+                $dataList += $_ -join $this.delimiter
             }
-            else {
-                $arr = $_.Split($this.delimiter)             
-                foreach($key in $pWhereList.Keys){
-                    $val = $pWhereList[$key]
-                    if (-not ($arr[$key] -cLike $val)){
-                        $ret = $false    
-                        break
-                    }
+        }
+
+        return $dataList
+    }
+
+    #============================================================
+    # 配列に変換
+    #------------------------------------------------------------
+    # 引数   : $pData : 変換元データ
+    # 戻り値 : 配列データ
+    #============================================================
+    [object[]] DataToArray($pData){
+        $dataList = @()
+        if ($pData.Length -le 0){
+            return $dataList
+        }
+
+        if ($pData[0].GetType().Name -eq "string"){
+            $pData | ForEach-Object {
+                $arr = $_.Split($this.delimiter).Trim()
+                if ($cnt -eq 0){
+                    # １行目をヘッダとして項目名取得
+                    # ※現状明細と処理が同じだが、ヘッダとは区別しておく
+                    $dataList += $arr
+                }
+                else {
+                    # 明細
+                    $dataList += $arr
                 }
             }
-            return $ret
         }
-    }
-
-    #============================================================
-    # データリスト取得(カスタムオブジェクト)(ヘッダ除外)
-    #------------------------------------------------------------
-    # 引数   : $pWhere : 抽出項目値(項目IDXと抽出項目値のハッシュテーブル)
-    # 戻り値 : データリスト
-    #------------------------------------------------------------
-    # 抽出項目値との一致判定は -cLike で判定する
-    #============================================================
-    [object[]] GetDataCustomObj(){
-        $objData = @()
-        if ($this.fileData.Length -le 0){
-            return $objData
-        }
-
-        #ヘッダから列名を取り出す
-        $colNames = $this.fileData[0].Split($this.delimiter).Trim()
-
-        $this.fileData | ForEach-Object {
-            if ( -not $this.CheckHeader($_)){
-                # ハッシュを作成
-                $hashData=[ordered]@{}    
-
-                $arr = $_.Split($this.delimiter)             
-
-                for ($i = 0 ; $i -lt $colNames.Length ; $i++){
-                    if ($arr.Length -gt $i){
-                        $hashData += @{$colNames[$i] = $arr[$i]}
-                    }
-                    else {
-                        $hashData += @{$colNames[$i] = ""}
-                    }
-                }
-                # ハッシュからカスタムオブジェクトにキャスト
-                $objData += [pscustomobject]$hashData
+        elseif ($pData[0].GetType().Name -eq "PSCustomObject"){
+            #列名を取り出す
+            $colNames = $pData[0].psobject.properties.name
+    
+            # ヘッダ
+            $dataList += $colNames
+    
+            # 明細
+            $pData | ForEach-Object {
+                $rec = $_
+                $arr = @()
+                $colNames | ForEach-Object {$arr += $rec.$_}
+                $dataList += $arr
             }
         }
-        return $objData
+
+        return $dataList
     }
 
     #============================================================
-    # ヘッダ判定文字列設定
+    # カスタムオブジェクトに変換
     #------------------------------------------------------------
-    # 引数   : $pArrStrHeader : ヘッダ判定文字列の配列
-    # 戻り値 : なし
+    # 引数   : $pData : 変換元データ
+    # 戻り値 : カスタムオブジェクトデータ
     #============================================================
-    [void] SetStrHeader([string[]]$pArrStrHeader){
-        $this.arrStrHeader = $pArrStrHeader
-    }
-
-    #============================================================
-    # ヘッダ判定
-    #------------------------------------------------------------
-    # 引数   : $pRec : 判定対象のレコード
-    # 戻り値 : ヘッダレコードの場合:$true, 以外:$false
-    #============================================================
-    [bool] CheckHeader($pRec){
-        $ret = $false
-
-        $arr = -Split $pRec
-        if ($this.arrStrHeader -contains $arr[0]){
-            $ret = $true
+    [object[]] DataToCustomObj($pData){
+        $dataList = @()
+        if ($pData.Length -le 0){
+            return $dataList
         }
 
-        return $ret
+        if ($pData[0].GetType().Name -eq "object[]"){
+            $cnt = 0
+            $pData | ForEach-Object {
+                if ($cnt -eq 0){
+                    # １行目をヘッダとして項目名取得
+                    $colNames = $_
+                }
+                else {
+                    # ハッシュを作成
+                    $hashData=[ordered]@{}    
+
+                    $arr = $_             
+
+                    for ($i = 0 ; $i -lt $colNames.Length ; $i++){
+                        if ($arr.Length -gt $i){
+                            $hashData += @{$colNames[$i] = $arr[$i]}
+                        }
+                        else {
+                            $hashData += @{$colNames[$i] = ""}
+                        }
+                    }
+                    # ハッシュからカスタムオブジェクトにキャスト
+                    $dataList += [pscustomobject]$hashData
+                }
+                $cnt++
+            }
+       }
+
+        return $dataList
     }
 
-    #============================================================
-    # レコード処理設定
-    #------------------------------------------------------------
-    # 引数   : $pRecProc : レコード処理関数
-    # 戻り値 : なし
-    #============================================================
-    [void] SetRecProc($pRecProc){
-        $this.funcRecProc = $pRecProc
-    }
-
-    #============================================================
-    # レコード処理実行
-    #------------------------------------------------------------
-    # 引数   : なし
-    # 戻り値 : なし
-    #============================================================
-    [void] ExecRecProc(){
-        $this.GetDataNotHeader() | ForEach-Object $this.funcRecProc
-    }
 }

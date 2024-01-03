@@ -1,25 +1,34 @@
-Write-Host "ファイル読込"
+Write-Host "データ変換"
 $DIR_PATH = Split-Path $MyInvocation.MyCommand.Path -Parent
 Set-Location -Path ($DIR_PATH)
 
-. .\smpl104_01.ps1
+. .\smpl107_01.ps1
 
-$objFile = New-Object CComFileAccess 
-$objFile.ReadFile("data.txt")
+$arrDataOrg = @(
+    ("col1", "col2", "col3"),
+    ("a001", "b001", "あ００１"),
+    ("a002", "b002", "あ００２"),
+    ("a003", "b003", "あ００３")
+)
 
-Write-Host "カスタムオブジェクトで取得"
-$objFile.SetStrHeader(@("col1"))
-$objFile.SetDelimiter(" ")
-$dataList = $objFile.GetDataCustomObj()
+Write-Host "配列からCSV"
+$cnv = New-Object CComCnvData
+$cnv.SetDelimiter(",")
+$csvData = $cnv.DataToCsv($arrDataOrg)
+Write-Host $csvData
 
-# 項目値変換
-foreach($rec in $dataList){
-    $rec.col2 = $rec.col2.replace("00", "11")
-}
+Write-Host "配列からカスタムオブジェクト"
+$objData = $cnv.DataToCustomObj($arrDataOrg)
+Write-Host $objData
 
-# ファイル書き込み(カスタムオブジェクト指定)(カンマ区切りに変更)
-$objFile.SetFilePath("data2.txt")
-$objFile.SetDelimiter(",")
-$objFile.WriteCsvFileCustomObj($dataList)
+Write-Host "カスタムオブジェクトから配列"
+$objData | ForEach-Object {$_.col2 = $_.col2.Replace("00", "xx")}
+$arrData = $cnv.DataToArray($objData)
+Write-Host $arrData
+
+Write-Host "CSVから配列"
+$csvData = $csvData.Replace("00", "yy")
+$arrData = $cnv.DataToArray($csvData)
+Write-Host $arrData
 
 Write-Host "処理終了"
