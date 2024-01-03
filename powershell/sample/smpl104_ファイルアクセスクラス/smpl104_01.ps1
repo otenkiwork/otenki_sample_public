@@ -22,6 +22,26 @@ class CComFileAccess {
     }
 
     #============================================================
+    # ファイルパス設定
+    #------------------------------------------------------------
+    # 引数   : $pFilePath : ファイルパス
+    # 戻り値 : なし
+    #============================================================
+    [void] SetFilePath($pFilePath){
+        $this.filePath = $pFilePath
+    }
+
+    #============================================================
+    # デリミタ設定
+    #------------------------------------------------------------
+    # 引数   : $pDelimiter : デリミタ
+    # 戻り値 : なし
+    #============================================================
+    [void] SetDelimiter($pDelimiter){
+        $this.delimiter = $pDelimiter
+    }
+
+    #============================================================
     # ファイル読み込み
     #------------------------------------------------------------
     # 引数   : $pFilePath : ファイルパス
@@ -30,6 +50,43 @@ class CComFileAccess {
     [void] ReadFile($pFilePath){
         $this.filePath = $pFilePath
         $this.fileData = Get-Content $this.filePath
+        test001
+    }
+
+    #============================================================
+    # ファイル書き込み
+    #------------------------------------------------------------
+    # 引数   : なし
+    # 戻り値 : なし
+    #============================================================
+    [void] WriteFile(){
+        Set-Content $this.filePath $this.fileData
+    }
+
+    #============================================================
+    # CSVファイル書き込み(カスタムオブジェクト指定)
+    #------------------------------------------------------------
+    # 引数   : $pObjData : 出力データ(カスタムオブジェクト指定)
+    # 戻り値 : なし
+    #============================================================
+    [void] WriteCsvFileCustomObj($pObjData){
+        $outData = @()
+        #列名を取り出す
+        $colNames = $pObjData[0].psobject.properties.name
+
+        # ヘッダ
+        $outData += ($colNames -join $this.delimiter)
+
+        # 明細
+        $pObjData | ForEach-Object {
+            $rec = $_
+            $arr = @()
+            $colNames | ForEach-Object {$arr += $rec.$_}
+            $outData += ($arr -join $this.delimiter)
+        }
+
+        $this.fileData = $outData
+        $this.WriteFile()
     }
 
     #============================================================
@@ -99,9 +156,7 @@ class CComFileAccess {
         $colNames = $this.fileData[0].Split($this.delimiter).Trim()
 
         $this.fileData | ForEach-Object {
-            if ($this.CheckHeader($_)){
-            }
-            else {
+            if ( -not $this.CheckHeader($_)){
                 # ハッシュを作成
                 $hashData=[ordered]@{}    
 
