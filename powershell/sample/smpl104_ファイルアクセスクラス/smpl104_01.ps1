@@ -63,25 +63,28 @@ class CComFileAccess {
     }
 
     #============================================================
-    # CSVファイル書き込み(カスタムオブジェクト指定)
+    # ファイル書き込み(データ指定)
     #------------------------------------------------------------
-    # 引数   : $pObjData : 出力データ(カスタムオブジェクト指定)
+    # 引数   : $pObjData : 出力データ
     # 戻り値 : なし
+    #------------------------------------------------------------
+    # 出力データは、文字列 or 配列 or カスタムオブジェクトの配列で指定
+    # 文字列指定                : そのまま出力
+    # 配列指定                  : CSV出力
+    # カスタムオブジェクト指定   : CSV出力
     #============================================================
-    [void] WriteCsvFileCustomObj($pObjData){
-        $outData = @()
-        #列名を取り出す
-        $colNames = $pObjData[0].psobject.properties.name
+    [void] WriteFileData($pData){
+        if ($pData.Length -le 0){
+            return
+        }
 
-        # ヘッダ
-        $outData += ($colNames -join $this.delimiter)
+        $outData = $pData
 
-        # 明細
-        $pObjData | ForEach-Object {
-            $rec = $_
-            $arr = @()
-            $colNames | ForEach-Object {$arr += $rec.$_}
-            $outData += ($arr -join $this.delimiter)
+        # データが文字列(CSV)以外は変換
+        if ($pData[0].GetType().Name -ne "string"){
+            $cnv = New-Object CComCnvData
+            $cnv.SetDelimiter($this.delimiter)
+            $outData = $cnv.DataToCsv($outData)
         }
 
         $this.fileData = $outData
