@@ -13,8 +13,10 @@ class CComDbAccess {
     $delimiter
     $dataType
     $dbCon
-    $dbCmd
-    $dbDataReader
+    $dbCmd = @{}
+
+    # 定数
+    $ID_DEF = "IDDEF"
 
     #============================================================
     # コンストラクタ
@@ -32,7 +34,7 @@ class CComDbAccess {
     }
 
     #============================================================
-    # DBオープン
+    # DBオープン(継承してオーバーライドする)
     #------------------------------------------------------------
     # 引数   : なし
     # 戻り値 : なし
@@ -88,41 +90,44 @@ class CComDbAccess {
     #============================================================
     [object] ExecSelect(){
         # SELECT文を実行し結果を取得
-        #$this.dbCmd = New-Object System.Data.SQLClient.SQLCommand($this.sql, $this.dbCon)
-        $this.dbCmd = $this.dbCon.CreateCommand()
-        $this.dbCmd.CommandText = $this.sql        
-        $this.dbDataReader = $this.dbCmd.ExecuteReader()
+        $this.dbCmd[$this.ID_DEF] = $this.dbCon.CreateCommand()
+        $this.dbCmd[$this.ID_DEF].CommandText = $this.sql        
+        #$reader = $this.dbCmd[$this.ID_DEF].ExecuteReader()
+        $adapter = $this.NewDbDataAdapter()
+        $adapter.SelectCommand = $this.dbCmd[$this.ID_DEF]
+        $dataset = New-Object System.Data.DataSet
+        $adapter.Fill($dataSet)
+        $dt = $dataset.Tables[0];
 
         $objData = @()
         switch ($this.dataType) {
-            "CustomObj" { $objData = $this.GetDataCustomObj() }
-            "Array" { $objData = $this.GetDataArray() }
-            "Str" { $objData = $this.GetDataStr() }
-            Default { $objData = $this.GetDataStr() }
+            "CustomObj" { $objData = $this.GetDataCustomObj($dt) }
+            "Array" { $objData = $this.GetDataArray($dt) }
+            "Str" { $objData = $this.GetDataStr($dt) }
+            Default { $objData = $this.GetDataStr($dt) }
         }
 
-        $this.dbDataReader.Close()
-        
         return $objData
     }
 
     #============================================================
     # データ取得(カスタムオブジェクト)
     #------------------------------------------------------------
-    # 引数   : なし
+    # 引数   : $pDataTable : データテーブル
     # 戻り値 : データ
     #============================================================
-    [object[]] GetDataCustomObj(){
+    [object[]] GetDataCustomObj($pDataTable){
         #列名を取り出す
-        $colNames = $this.dbDataReader.GetSchemaTable() | Select-Object ColumnName
+        $colNames = $pDataTable.Columns
 
         #データが取り出せなくなるまでループ
-        $objData = while ($this.dbDataReader.read()){
-             $colNames | ForEach-Object -Begin {
+        $objData = $pDataTable | ForEach-Object {
+            $rec = $_
+            $colNames | ForEach-Object -Begin {
                 # ハッシュを作成
                 $hashData=[ordered]@{}    
             } -Process {
-                $hashData += @{$_.ColumnName = $this.dbDataReader[$_.ColumnName].tostring()}               
+                $hashData += @{$_.ColumnName = $rec[$_.ColumnName].tostring()}               
             } -End {
                 # ハッシュからカスタムオブジェクトにキャスト
                 [pscustomobject]$hashData     
@@ -136,68 +141,30 @@ class CComDbAccess {
     #============================================================
     # データ取得(文字列)
     #------------------------------------------------------------
-    # 引数   : なし
+    # 引数   : $pDataTable : データテーブル
     # 戻り値 : データ
     #============================================================
-    [object[]] GetDataStr(){
-        $objData = @()
+    [object[]] GetDataStr($pDataTable){
+        $objData = $this.GetDataCustomObj($pDataTable)
 
-        #列名を取り出す
-        $colNames = $this.dbDataReader.GetSchemaTable() | Select-Object ColumnName
-
-        #ヘッダ
-        $line = ""    
-        $colNames | ForEach-Object {
-            if ($line -ne ""){
-                $line += $this.delimiter
-            }
-            $line += $_.ColumnName               
-        }
-        $objData += $line
-
-        #データが取り出せなくなるまでループ
-        while ($this.dbDataReader.read()){
-            $line = ""    
-            $colNames | ForEach-Object {
-                if ($line -ne ""){
-                    $line += $this.delimiter
-                }
-                $line += $this.dbDataReader[$_.ColumnName].tostring()               
-            }
-            $objData += $line
-        }
-
+        # CSV文字列に変換
+        $cnv = New-Object CComCnvData
+        $objData = $cnv.DataToCsv($objData)
         return $objData
     }
 
     #============================================================
     # データ取得(配列)
     #------------------------------------------------------------
-    # 引数   : なし
+    # 引数   : $pReader : データリーダー
     # 戻り値 : データ
     #============================================================
-    [object[]] GetDataArray(){
-        $objData = @()
+    [object[]] GetDataArray($pDataTable){
+        $objData = $this.GetDataCustomObj($pDataTable)
 
-        #列名を取り出す
-        $colNames = $this.dbDataReader.GetSchemaTable() | Select-Object ColumnName
-
-        #ヘッダ
-        $arr = @()    
-        $colNames | ForEach-Object {
-            $arr += $_.ColumnName               
-        }
-        $objData += $arr
-
-        #データが取り出せなくなるまでループ
-        while ($this.dbDataReader.read()){
-            $arr = @()    
-            $colNames | ForEach-Object {
-                $arr += $this.dbDataReader[$_.ColumnName].tostring()               
-            }
-            $objData += $arr
-        }
-
+        # 配列に変換
+        $cnv = New-Object CComCnvData
+        $objData = $cnv.DataToArray($objData)
         return $objData
     }
 
@@ -216,75 +183,3 @@ class CComDbAccess {
     }
 }
 
-#==============================================================================
-# DBアクセスクラス(SQLServer用)
-#==============================================================================
-class CComDbSqlServer : CComDbAccess{
-    # メンバ
-
-    #============================================================
-    # コンストラクタ
-    #------------------------------------------------------------
-    # 引数 : なし
-    #============================================================
-    CComDbSqlServer($pServerName, $pDbName, $pUser, $pPassword, $pPort) : 
-        base($pServerName, $pDbName, $pUser, $pPassword, $pPort) {
-
-    }
-
-    #============================================================
-    # DBオープン(SQLServer)
-    #------------------------------------------------------------
-    # 引数   : なし
-    # 戻り値 : なし
-    #============================================================
-    [void] Open(){
-        # 接続情報の設定
-        $conStr = New-Object -TypeName System.Data.SqlClient.SqlConnectionStringBuilder
-        $conStr['Data Source'] = $this.serverName # サーバー名
-        $conStr['Initial Catalog'] = $this.dbName         # DB名
-        $conStr['user id'] = $this.user                    # ユーザー名
-        $conStr['password'] = $this.password                   # パスワード    
-
-        # 接続
-        $this.dbCon = New-Object System.Data.SQLClient.SQLConnection($conStr)
-        $this.dbCon.Open()
-    }
-
-}
-#==============================================================================
-# DBアクセスクラス(MySQL用)
-#==============================================================================
-class CComDbMySql : CComDbAccess {
-    # メンバ
-
-    #============================================================
-    # コンストラクタ
-    #------------------------------------------------------------
-    # 引数 : なし
-    #============================================================
-    CComDbMySql($pServerName, $pDbName, $pUser, $pPassword, $pPort) : 
-        base($pServerName, $pDbName, $pUser, $pPassword, $pPort){
-    }
-
-    #============================================================
-    # DBオープン(MySql)
-    #------------------------------------------------------------
-    # 引数   : なし
-    # 戻り値 : なし
-    #============================================================
-    [void] Open(){
-        # 接続情報の設定
-        [string]$mySQLHost             = $this.serverName
-        [string]$mySQLPort             = $this.port
-        [string]$mySQLUserName         = $this.user
-        [string]$mySQLPassword         = $this.password
-        [string]$mySQLDB               = $this.dbName
-        [string]$conStr = "server='$mySQLHost';port='$mySQLPort';uid='$mySQLUserName';pwd=$mySQLPassword;database=$mySQLDB"
-
-        # 接続
-        $this.dbCon = New-Object MySql.Data.MySqlClient.MySqlConnection($conStr)
-        $this.dbCon.Open()
-    }
-
-}

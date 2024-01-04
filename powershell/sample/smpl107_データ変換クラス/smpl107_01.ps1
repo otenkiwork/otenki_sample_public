@@ -48,7 +48,7 @@ class CComCnvData {
         elseif ($pData[0].GetType().Name -eq "PSCustomObject"){
             # ”z—ñ‚É•ÏŠ·ŒãACSV‚É•ÏŠ·
             $tmp = $this.DataToArray($pData)
-            $this.DataToCsv($tmp)
+            $dataList = $this.DataToCsv($tmp)
         }
 
         return $dataList
