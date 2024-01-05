@@ -10,6 +10,10 @@ try {
     . .\smpl105_01mysql.ps1
     . ..\smpl107_データ変換クラス\smpl107_01.ps1
 
+    $objDb = $null
+
+    $a = 10 / 0
+
     # DBオープン
     $objDb = New-Object CComDbMySql("sv-ubuntu", "test_db", "miya", "wfrog9442", "3306") 
     $objDb.Open()
@@ -35,15 +39,35 @@ try {
     $data = $objDb.ExecSelect()
     $data | ForEach-Object {Write-Host $_}
 
+    $objDb.BeginTran()
+
+    # データ削除
+    Write-Host "データ削除"
+    $objDb.SetSql("DELETE FROM tbl001 WHERE col001 >= 101")
+    $cnt = $objDb.ExecNonQuery()
+
+    # データ追加
+    Write-Host "データ追加"
+    $objDb.SetSql("INSERT tbl001 (col001, col002) VALUES (101, 'TEST101')")
+    $cnt = $objDb.ExecNonQuery()
+
+    $objDb.Commit()
+
     # DBクローズ
     $objDb.Close()
     
     Write-Host "処理終了"
 }
-catch [Exception] {
-    foreach ($err in $Error){
-        Write-Host ("エラーメッセージ:" + $err.Exception.message)
-        Write-Host ("LoaderExceptions:" + $err.Exception.LoaderExceptions)
-        Write-Host ("スタックトレース:" + $err.ScriptStackTrace)
+catch {
+    if ($null -ne $objDb){
+        # ロールバック
+        $objDb.Rollback()
+
+        # DBクローズ
+        $objDb.Close()
     }
+
+    Write-Host ("エラーメッセージ:" + $_.Exception.message)
+    Write-Host ("LoaderExceptions:" + $_.Exception.LoaderExceptions)
+    Write-Host ("スタックトレース:" + $_.ScriptStackTrace)
 }

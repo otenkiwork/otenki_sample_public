@@ -13,10 +13,8 @@ class CComDbAccess {
     $delimiter
     $dataType
     $dbCon
-    $dbCmd = @{}
-
-    # 定数
-    $ID_DEF = "IDDEF"
+    $dbCmd
+    $dbTran
 
     #============================================================
     # コンストラクタ
@@ -49,7 +47,42 @@ class CComDbAccess {
     # 戻り値 : なし
     #============================================================
     [void] Close(){
-        $this.dbCon.Close()
+        if ($null -ne $this.dbCon){
+            $this.dbCon.Close()
+            $this.dbCon = $null
+        }
+    }
+
+    #============================================================
+    # トランザクション開始
+    #------------------------------------------------------------
+    # 引数   : なし
+    # 戻り値 : なし
+    #============================================================
+    [void] BeginTran(){
+        $this.dbTran = $this.dbCon.BeginTransaction()
+    }
+
+    #============================================================
+    # トランザクションコミット
+    #------------------------------------------------------------
+    # 引数   : なし
+    # 戻り値 : なし
+    #============================================================
+    [void] Commit(){
+        $this.dbTran.Commit()
+        $this.dbTran = $null
+    }
+
+    #============================================================
+    # トランザクションロールバック
+    #------------------------------------------------------------
+    # 引数   : なし
+    # 戻り値 : なし
+    #============================================================
+    [void] Rollback(){
+        $this.dbTran.Rollback()
+        $this.dbTran = $null
     }
 
     #============================================================
@@ -90,11 +123,10 @@ class CComDbAccess {
     #============================================================
     [object] ExecSelect(){
         # SELECT文を実行し結果を取得
-        $this.dbCmd[$this.ID_DEF] = $this.dbCon.CreateCommand()
-        $this.dbCmd[$this.ID_DEF].CommandText = $this.sql        
-        #$reader = $this.dbCmd[$this.ID_DEF].ExecuteReader()
+        $this.dbCmd = $this.dbCon.CreateCommand()
+        $this.dbCmd.CommandText = $this.sql        
         $adapter = $this.NewDbDataAdapter()
-        $adapter.SelectCommand = $this.dbCmd[$this.ID_DEF]
+        $adapter.SelectCommand = $this.dbCmd
         $dataset = New-Object System.Data.DataSet
         $adapter.Fill($dataSet)
         $dt = $dataset.Tables[0];
@@ -176,7 +208,8 @@ class CComDbAccess {
     #============================================================
     [int] ExecNonQuery(){
         # SQL文を実行
-        $this.dbCmd = New-Object System.Data.SQLClient.SQLCommand($this.sql, $this.dbCon)
+        $this.dbCmd = $this.dbCon.CreateCommand()
+        $this.dbCmd.CommandText = $this.sql        
         $rowCount = $this.dbCmd.ExecuteNonQuery()
 
         return $rowCount
