@@ -55,7 +55,7 @@ try {
     (1, "TEST001X"),
     (2, "TEST002X"),
     (3, "TEST003X"),
-    (4, "TEST004X"),
+    (4, "TEST004XX"),
     (5, "TEST005X")
     )
     $cnv = New-Object CComCnvData

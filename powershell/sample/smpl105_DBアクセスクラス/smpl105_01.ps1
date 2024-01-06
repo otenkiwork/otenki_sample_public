@@ -28,7 +28,7 @@ class CComDbAccess {
         $this.password = $pPassword
         $this.port = $pPort
         $this.sql = ""
-        $this.delimiter = " "
+        $this.delimiter = ""
     }
 
     #============================================================
@@ -123,13 +123,32 @@ class CComDbAccess {
     # 引数   : なし
     # 戻り値 : データリスト
     #============================================================
-    [object] ExecSelect(){
+    [object[]] ExecSelect(){
+        $objData = $this.ExecSelectByParam($null)
+        return $objData
+    }
+
+    #============================================================
+    # SQL実行(SELECT文を実行しデータ取得パラメータ指定)
+    #------------------------------------------------------------
+    # 引数   : なし
+    # 戻り値 : データリスト
+    #============================================================
+    [object[]] ExecSelectByParam($pParams){
         # SELECT文を実行し結果を取得
         $this.dbCmd = $this.dbCon.CreateCommand()
         $this.dbCmd.CommandText = $this.sql        
         $adapter = $this.NewDbDataAdapter()
         $adapter.SelectCommand = $this.dbCmd
         $dataset = New-Object System.Data.DataSet
+
+        # パラメータ設定
+        if ($null -ne $pParams){
+            foreach ($param in $pParams){
+                $adapter.SelectCommand.Parameters.AddWithValue($param[0],$param[1])
+            }
+        }
+
         $adapter.Fill($dataSet)
         $dt = $dataset.Tables[0];
 
