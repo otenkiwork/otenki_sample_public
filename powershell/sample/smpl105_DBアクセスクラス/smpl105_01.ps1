@@ -81,8 +81,10 @@ class CComDbAccess {
     # 戻り値 : なし
     #============================================================
     [void] Rollback(){
-        $this.dbTran.Rollback()
-        $this.dbTran = $null
+        if ($null -ne $this.dbTran){
+            $this.dbTran.Rollback()
+            $this.dbTran = $null
+        }
     }
 
     #============================================================
@@ -152,13 +154,13 @@ class CComDbAccess {
         #列名を取り出す
         $colNames = $pDataTable.Columns
 
-        #データが取り出せなくなるまでループ
         $objData = $pDataTable | ForEach-Object {
             $rec = $_
             $colNames | ForEach-Object -Begin {
                 # ハッシュを作成
                 $hashData=[ordered]@{}    
             } -Process {
+                # ハッシュに(項目名=項目値)を追加
                 $hashData += @{$_.ColumnName = $rec[$_.ColumnName].tostring()}               
             } -End {
                 # ハッシュからカスタムオブジェクトにキャスト
@@ -213,6 +215,50 @@ class CComDbAccess {
         $rowCount = $this.dbCmd.ExecuteNonQuery()
 
         return $rowCount
+    }
+
+    #============================================================
+    # テーブル更新
+    #------------------------------------------------------------
+    # 引数   : $pTableName : テーブル名
+    # 引数   : $pData      : 登録データ
+    # 引数   : $pKeyCols   : キー項目(配列で指定)
+    # 戻り値 : 処理件数
+    #============================================================
+    [int] UpdateTable($pTableName, $pData, $pKeyCols){
+        $updateCount = 0
+
+        # SQL文を実行
+        $this.dbCmd = $this.dbCon.CreateCommand()
+
+        $pData | ForEach-Object {
+            $rec = $_
+
+            # 対象を一旦削除
+            $strWhere = " WHERE "
+            $pKeyCols | ForEach-Object {
+                $strWhere += ($pKeyCols + " = '" + $rec.$_ + "'")
+            }
+
+            $sql = "DELETE FROM " + $pTableName + $strWhere
+            $this.dbCmd.CommandText = $sql        
+            $rowCount = $this.dbCmd.ExecuteNonQuery()
+
+            # 対象を登録
+            $strColList = " ( "
+            $strColList += ($rec.psobject.properties.name -Join ",")
+            $strColList += " ) "
+            $strValList = " ( "
+            $strValList += (($rec.psobject.properties.value | ForEach-Object {"'" + $_ + "'"}) -Join ",")
+            $strValList += " ) "
+
+            $sql = "INSERT " + $pTableName + $strColList + " VALUES " + $strValList
+            $this.dbCmd.CommandText = $sql        
+            $rowCount = $this.dbCmd.ExecuteNonQuery()
+            $updateCount += $rowCount
+        }
+
+        return $updateCount
     }
 }
 

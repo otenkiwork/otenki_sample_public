@@ -12,8 +12,6 @@ try {
 
     $objDb = $null
 
-    $a = 10 / 0
-
     # DBオープン
     $objDb = New-Object CComDbMySql("sv-ubuntu", "test_db", "miya", "wfrog9442", "3306") 
     $objDb.Open()
@@ -50,6 +48,19 @@ try {
     Write-Host "データ追加"
     $objDb.SetSql("INSERT tbl001 (col001, col002) VALUES (101, 'TEST101')")
     $cnt = $objDb.ExecNonQuery()
+
+    # テーブル更新
+    Write-Host "テーブル更新"
+    $arrData = @(("col001", "col002"),
+    (1, "TEST001X"),
+    (2, "TEST002X"),
+    (3, "TEST003X"),
+    (4, "TEST004X"),
+    (5, "TEST005X")
+    )
+    $cnv = New-Object CComCnvData
+    $objData = $cnv.DataToCustomObj($arrData)
+    $cnt = $objDb.UpdateTable("tbl001", $objData, @("col001"))
 
     $objDb.Commit()
 
