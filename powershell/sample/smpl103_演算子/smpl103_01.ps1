@@ -34,5 +34,5 @@ Write-Host ("Å° îzóÒî‰är")
 $arrVal = @("aaa", "bbb", "ccc")
 Write-Host ("`$arrVal=" + $arrVal)
 Write-Host ("`$arrVal -contains ""aaa"" " + ($arrVal -contains "aaa"))
-Write-Host ("`$arrVal -contains ""aaa"" " + ($arrVal -contains "ddd"))
+Write-Host ("`$arrVal -contains ""ddd"" " + ($arrVal -contains "ddd"))
 
