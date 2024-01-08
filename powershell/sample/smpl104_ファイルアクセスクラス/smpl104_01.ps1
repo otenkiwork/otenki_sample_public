@@ -1,14 +1,20 @@
 #==============================================================================
 # ファイルアクセスクラス
 #==============================================================================
+enum ComWriteFileMode {
+    OverWrite
+    Append
+}
 class CComFileAccess {
+
     # メンバ
     $filePath
     $fileData
     $arrStrHeader    # ヘッダ行と判定する文字列
     $funcRecProc
     $delimiter
-
+    $writeMode = [ComWriteFileMode]::OverWrite
+    
     #============================================================
     # コンストラクタ
     #------------------------------------------------------------
@@ -42,6 +48,16 @@ class CComFileAccess {
     }
 
     #============================================================
+    # 書き込みモード設定
+    #------------------------------------------------------------
+    # 引数   : $pMode : 書き込みモード（上書き、追記）
+    # 戻り値 : なし
+    #============================================================
+    [void] SetWriteMode([ComWriteFileMode]$pMode){
+        $this.writeMode = $pMode
+    }
+
+    #============================================================
     # ファイル読み込み
     #------------------------------------------------------------
     # 引数   : $pFilePath : ファイルパス
@@ -59,7 +75,17 @@ class CComFileAccess {
     # 戻り値 : なし
     #============================================================
     [void] WriteFile(){
-        Set-Content $this.filePath $this.fileData
+        switch ($this.writeMode){
+            OverWrite{
+                # 上書き
+                Set-Content $this.filePath $this.fileData
+            }
+            Append{
+                # 追記
+                Add-Content $this.filePath $this.fileData
+                #$this.fileData | % {$_; Start-Sleep 1} | Add-Content $this.filePath  
+            }
+        }
     }
 
     #============================================================
@@ -78,16 +104,7 @@ class CComFileAccess {
             return
         }
 
-        $outData = $pData
-
-        # データが文字列(CSV)以外は変換
-        if ($pData[0].GetType().Name -ne "string"){
-            $cnv = New-Object CComCnvData
-            $cnv.SetDelimiter($this.delimiter)
-            $outData = $cnv.DataToCsv($outData)
-        }
-
-        $this.fileData = $outData
+        $this.SetData($pData)
         $this.WriteFile()
     }
 
@@ -177,6 +194,25 @@ class CComFileAccess {
             }
         }
         return $objData
+    }
+
+    #============================================================
+    # データリスト設定
+    #------------------------------------------------------------
+    # 引数   : $pData : データリスト
+    # 戻り値 : なし
+    #============================================================
+    [void] SetData($pData){
+        $outData = $pData
+
+        # データが文字列(CSV)以外は変換
+        if ($pData[0].GetType().Name -ne "string"){
+            $cnv = New-Object CComCnvData
+            $cnv.SetDelimiter($this.delimiter)
+            $outData = $cnv.DataToCsv($outData)
+        }
+
+        $this.fileData = $outData
     }
 
     #============================================================
