@@ -4,6 +4,8 @@
 class CComCnvData {
     # メンバ
     $arrHeader
+    $addHeaderFlg
+    $addHeaderDone
     $delimiter
 
     #============================================================
@@ -13,7 +15,9 @@ class CComCnvData {
     #============================================================
     CComCnvData(){
         $this.arrHeader = @()
-        $this.delimiter = " "
+        $this.addHeaderFlg = $false
+        $this.addHeaderDone = $false
+        $this.delimiter = ""
     }
 
     #============================================================
@@ -33,6 +37,8 @@ class CComCnvData {
     # 戻り値 : CSVデータ
     #============================================================
     [object[]] DataToCsv($pData){
+        $this.addHeaderDone = $false
+
         $dataList = @()
         if ($pData.Length -le 0){
             return $dataList
@@ -40,6 +46,12 @@ class CComCnvData {
 
         # データが配列
         if ($pData[0].GetType().Name -eq "object[]"){
+            if ($this.addHeaderFlg -and ($this.arrHeader.Length -gt 0) -and (-not $this.addHeaderDone)){
+                # ヘッダ追加
+                $dataList += $this.arrHeader -join $this.delimiter
+                $this.addHeaderDone = $true
+            }
+
             $pData | ForEach-Object {
                 $dataList += $_ -join $this.delimiter
             }
@@ -61,6 +73,8 @@ class CComCnvData {
     # 戻り値 : 配列データ
     #============================================================
     [object[]] DataToArray($pData){
+        $this.addHeaderDone = $false
+
         $dataList = @()
         if ($pData.Length -le 0){
             return $dataList
@@ -68,6 +82,12 @@ class CComCnvData {
 
         # データが文字列(csv)
         if ($pData[0].GetType().Name -eq "string"){
+            if ($this.addHeaderFlg -and ($this.arrHeader.Length -gt 0) -and (-not $this.addHeaderDone)){
+                # ヘッダ追加
+                $dataList += ,$this.arrHeader
+                $this.addHeaderDone = $true
+            }
+
             $pData | ForEach-Object {
                 $arr = $_.Split($this.delimiter).Trim()
                 if ($cnt -eq 0){
@@ -107,6 +127,8 @@ class CComCnvData {
     # 戻り値 : カスタムオブジェクトデータ
     #============================================================
     [object[]] DataToCustomObj($pData){
+        $this.addHeaderDone = $false
+
         $dataList = @()
         if ($pData.Length -le 0){
             return $dataList
@@ -114,13 +136,25 @@ class CComCnvData {
 
         # データが配列
         if ($pData[0].GetType().Name -eq "object[]"){
+            $dataStartCnt = 0
             $cnt = 0
             $pData | ForEach-Object {
                 if ($cnt -eq 0){
-                    # １行目をヘッダとして項目名取得
-                    $colNames = $_
+                    if ($this.addHeaderFlg -and ($this.arrHeader.Length -gt 0) -and (-not $this.addHeaderDone)){
+                        # ヘッダ追加
+                        $colNames = $this.arrHeader
+                        $this.addHeaderDone = $true
+                    }
+                    else {
+                        # １行目をヘッダとして項目名取得
+                        $colNames = $_
+                        # データ開始行を＋１
+                        $dataStartCnt++
+                    }
                 }
-                else {
+
+                # データ開始行以上であればハッシュ追加
+                if ($cnt -ge $dataStartCnt){
                     # ハッシュを作成
                     $hashData=[ordered]@{}    
 
