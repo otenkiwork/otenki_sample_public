@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- WARNING: Eclipse auto-generated file.
+              Any modifications will be overwritten.
+              To include a user specific buildfile here, simply create one in the same
+              directory with the processing instruction <?eclipse.ant.import?>
+              as the first entry and export the buildfile again. --><project basedir="." default="build" name="sample006_ant">
+    <property environment="env"/>
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="17"/>
+    <property name="source" value="17"/>
+
+	<!--
+		ビルドのベースディレクトリ。
+		何もなければ${basedir}を使っても問題ありませんが、
+		他プロジェクトのbuild.xmlからこのbuild.xmlのタスクを呼び出したとき、
+		basedirがずれてしまうことがあるので、別に定義しておく。
+	-->
+	<dirname property="base" file="${ant.file}"/>
+
+	<!-- JARファイル名 -->
+	<property name="jarname" value="sample006" />
+
+	<!-- ビルド成果物ディレクトリ -->
+	<property name="dir.target" value="bin" />
+	<property name="dir.target.classes" value="${dir.target}/classes" />
+              	
+    <path id="sample006_ant.classpath">
+        <pathelement location="bin"/>
+    </path>
+    <path id="run.sample006.classpath">
+        <path refid="sample006_ant.classpath"/>
+    </path>
+    <target name="init">
+        <mkdir dir="bin"/>
+        <copy includeemptydirs="false" todir="bin">
+            <fileset dir="src">
+                <exclude name="**/*.launch"/>
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+    <target name="clean">
+        <delete dir="bin"/>
+    </target>
+    <target depends="clean" name="cleanall"/>
+    <target depends="build-subprojects,build-project" name="build"/>
+    <target name="build-subprojects"/>
+    <target depends="init" name="build-project">
+        <echo message="${ant.project.name}: ${ant.file}"/>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="bin" includeantruntime="false" source="${source}" target="${target}">
+            <src path="src"/>
+            <classpath refid="sample006_ant.classpath"/>
+        </javac>
+    </target>
+    <target description="Build all projects which reference this project. Useful to propagate changes." name="build-refprojects"/>
+    <target description="copy Eclipse compiler jars to ant lib directory" name="init-eclipse-compiler">
+        <copy todir="${ant.library.dir}">
+            <fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar"/>
+        </copy>
+        <unzip dest="${ant.library.dir}">
+            <patternset includes="jdtCompilerAdapter.jar"/>
+            <fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar"/>
+        </unzip>
+    </target>
+    <target description="compile project with Eclipse compiler" name="build-eclipse-compiler">
+        <property name="build.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter"/>
+        <antcall target="build"/>
+    </target>
+    <target name="sample006">
+        <java classname="sample006" failonerror="true" fork="yes">
+            <classpath refid="run.sample006.classpath"/>
+        </java>
+    </target>
+
+	<!-- JARファイル作成(開発用) -->
+	<target name="makeJar" description="開発用JARファイル作成">
+		<!-- 作業用ディレクトリのcleanup -->
+		<antcall target="clean"/>
+		<antcall target="build"/>
+		<echo message="JARファイルを作成します。" />
+		<jar basedir="bin" destfile="${base}/${jarname}.jar" />
+<!--
+		<antcall target="filecopy">
+			<param name="dir.env" value="${dir.resources}" />
+		</antcall>
+-->
+
+	</target>              	
+</project>
