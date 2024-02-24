@@ -39,3 +39,10 @@ goodsController ->>+ goodsService: 文房具検索メソッド(種類, 色, メ�
 goodsService　-->>- goodsController : 画面表示用文房具データ
 ```
 
+```mermaid
+graph TD;
+    A-->BBB;
+    A-->C;
+    BBB-->D;
+    C-->D;
+```
