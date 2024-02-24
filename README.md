@@ -36,3 +36,4 @@
 ## 見出し ６
 
 ![test](md/image/image001.PNG)
+![alt text](image.png)
