@@ -46,3 +46,46 @@ graph TD;
     BBB-->D;
     C-->D;
 ```
+
+## マージ
+```mermaid
+%%{init: { 
+ 'gitGraph': { 'mainBranchName': 'staging' },
+ 'themeVariables': { 'commitLabelFontSize': '18px' }
+} }%%
+gitGraph
+    commit id: "A1"
+    commit id: "A2"
+    branch feature1
+    checkout feature1
+    commit id: "B1"
+    commit id: "B2"
+    checkout staging
+    commit id: "A3"
+    commit id: "A4"
+    checkout feature1
+    merge staging id: "MERGE"
+```
+
+## リベース
+```mermaid
+%%{init: { 
+ 'gitGraph': { 'mainBranchName': 'staging' },  
+ 'themeVariables': { 'commitLabelFontSize': '18px' }
+} }%%
+gitGraph
+    commit id: "A1"
+    commit id: "A2"
+    branch feature1
+    checkout feature1
+    commit id: "B1" type: REVERSE
+    commit id: "B2" type: REVERSE
+    checkout staging
+    commit id: "A3"
+    commit id: "A4"
+    checkout feature1
+    merge staging id: "REBASE"
+    commit id: "B1'"
+    commit id: "B2'"
+```
+
