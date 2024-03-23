@@ -11,7 +11,7 @@ $fileList = Get-ChildItem $dirPath -File
 # 作業ディレクトリ内ファイル一覧取得して、最新のコミット日時を取得
 foreach ($file in $fileList) {
     $gitFilePath = Join-Path $gitDirName $file.Name
-    $timeStamp = (git log -1 --date=format:"%Y/%m/%d %H:%M:%S" --pretty=format:"%ad" $gitFilePath)
+    $timeStamp = (git -C $rootPath log -1 --date=format:"%Y/%m/%d %H:%M:%S" --pretty=format:"%ad" $gitFilePath)
     if ($null -eq $timeStamp){
         Write-Host $gitFilePath "Git未登録"
     }
@@ -23,7 +23,7 @@ foreach ($file in $fileList) {
 # 【タグ指定】作業ディレクトリ内ファイル一覧取得して、指定タグ以前で最新のコミット日時を取得
 foreach ($file in $fileList) {
     $gitFilePath = Join-Path $gitDirName $file.Name
-    $timeStamp = (git log -1 --date=format:"%Y/%m/%d %H:%M:%S" --pretty=format:"%ad" v1.0.0 $gitFilePath)
+    $timeStamp = (git -C $rootPath log -1 --date=format:"%Y/%m/%d %H:%M:%S" --pretty=format:"%ad" v1.0.0 $gitFilePath)
     if ($null -eq $timeStamp){
         Write-Host $gitFilePath "Git未登録"
     }
@@ -36,7 +36,7 @@ git config --local core.quotepath false
 $fileList = (git ls-files)
 foreach ($file in $fileList) {
     $gitFilePath = $file
-    $timeStamp = (git log -1 --date=format:"%Y/%m/%d %H:%M:%S" --pretty=format:"%ad" v1.0.0 $gitFilePath)
+    $timeStamp = (git -C $rootPath log -1 --date=format:"%Y/%m/%d %H:%M:%S" --pretty=format:"%ad" v1.0.0 $gitFilePath)
     if ($null -eq $timeStamp){
         Write-Host $gitFilePath "Git未登録"
     }
