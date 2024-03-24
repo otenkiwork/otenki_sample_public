@@ -32,16 +32,3 @@ foreach ($file in $fileList) {
     }
 }
 
-git config --local core.quotepath false
-$fileList = (git ls-files)
-foreach ($file in $fileList) {
-    $gitFilePath = $file
-    $timeStamp = (git -C $rootPath log -1 --date=format:"%Y/%m/%d %H:%M:%S" --pretty=format:"%ad" v1.0.0 $gitFilePath)
-    if ($null -eq $timeStamp){
-        Write-Host $gitFilePath "Git–¢“o˜^"
-    }
-    else {
-        Write-Host $gitFilePath $timeStamp
-    }
-}
-
