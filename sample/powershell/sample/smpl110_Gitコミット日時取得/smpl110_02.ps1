@@ -4,7 +4,13 @@
 
 $rootPath = "C:\Data\dep\Git\git_otenkiwork\otenki_sample_public"
 
+# Gitコマンドが、日本語エスケープされないようにする設定
 git config --local core.quotepath false
+
+# powershellエンコーディング設定の変更
+$tmpOrgCode = [console]::OutputEncoding
+[console]::OutputEncoding = [System.Text.Encoding]::GetEncoding('utf-8')
+
 $fileList = (git -C $rootPath ls-files)
 foreach ($file in $fileList) {
     $gitFilePath = $file
@@ -16,4 +22,7 @@ foreach ($file in $fileList) {
         Write-Host $gitFilePath $timeStamp
     }
 }
+
+# powershellエンコーディング設定を元に戻す
+[console]::OutputEncoding = $tmpOrgCode 
 
